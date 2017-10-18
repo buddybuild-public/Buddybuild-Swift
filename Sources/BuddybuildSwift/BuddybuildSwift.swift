@@ -113,6 +113,19 @@ public struct Buddybuild {
         }
     }
 
+    static let build: Build = {
+        do {
+            return try Build(env: ProcessInfo.processInfo.environment)
+        } catch {
+            fatalError("Unable to retrieve informations about the build, are you sure it's a Buddybuild custom script?")
+        }
+    }()
+
+    static let ios: IOS? = {
+        return try? IOS(env: ProcessInfo.processInfo.environment)
+    }()
+
+    static let android: Android? = {
+        return try? Android(env: ProcessInfo.processInfo.environment)
+    }()
 }
-
-
