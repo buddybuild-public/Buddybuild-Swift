@@ -34,11 +34,11 @@ public struct Buddybuild {
         case api = "api_triggered"
     }
 
-    struct IOS {
-        let IPA: File?
-        let appStoreIPA: File?
-        let testDir: Folder?
-        let scheme: String
+    public struct IOS {
+        public let IPA: File?
+        public let appStoreIPA: File?
+        public let testDir: Folder?
+        public let scheme: String
 
         init(env: Environment) throws {
             self.IPA = try? File(path: env.get("IPA_PATH"))
@@ -48,11 +48,11 @@ public struct Buddybuild {
         }
     }
 
-    struct Android {
-        let APKs: Folder
-        let variants: [String] // TODO: CHECK THIS
-        let home: Folder
-        let NDKHome: Folder
+    public struct Android {
+        public let APKs: Folder
+        public let variants: [String] // TODO: CHECK THIS
+        public let home: Folder
+        public let NDKHome: Folder
 
         init(env: Environment) throws {
             self.APKs = try Folder(path: env.get("APKS_DIR"))
@@ -62,17 +62,17 @@ public struct Buddybuild {
         }
     }
 
-    struct Build {
-        let buildNumber: Int
-        let buildId: String
-        let appId: String
-        let branch: String
-        let baseBranch: String?
-        let repoSlug: String
-        let pullRequestId: Int?
-        let workspace: Folder
-        let secureFiles: Folder
-        let triggeredBy: Trigger
+    public struct Build {
+        public let buildNumber: Int
+        public let buildId: String
+        public let appId: String
+        public let branch: String
+        public let baseBranch: String?
+        public let repoSlug: String
+        public let pullRequestId: Int?
+        public let workspace: Folder
+        public let secureFiles: Folder
+        public let triggeredBy: Trigger
 
         init(env: Environment) throws {
             let f = NumberFormatter()
@@ -107,7 +107,7 @@ public struct Buddybuild {
         }
     }
 
-    static let build: Build = {
+    static public let build: Build = {
         do {
             return try Build(env: Environment(config: ProcessInfo.processInfo.environment))
         } catch {
@@ -115,11 +115,11 @@ public struct Buddybuild {
         }
     }()
 
-    static let ios: IOS? = {
+    static public let ios: IOS? = {
         return try? IOS(env: Environment(config: ProcessInfo.processInfo.environment))
     }()
 
-    static let android: Android? = {
+    static public let android: Android? = {
         return try? Android(env: Environment(config: ProcessInfo.processInfo.environment))
     }()
 }
