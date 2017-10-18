@@ -1,26 +1,28 @@
 import Foundation
 import Files
 
-public struct Folder {
-    let path: String
-}
-
-public struct File {
-    let path: String
-}
-
 public enum Error: Swift.Error {
+    case missingKey(String)
     case invalidEnv
 }
 
-func bbEnv(for key: String, in env: [String: String]) throws -> String {
-    guard let v = env[key] else {
-        throw Error.invalidEnv
+typealias EnvironmentConfiguration = [String: String]
+struct Environment {
+
+    let config: EnvironmentConfiguration
+
+    func get(_ key: String) throws -> String {
+        guard let v = config[key] else {
+            throw Error.missingKey(key)
+        }
+
+        return v
     }
 
-    return v
+    func folder(_ key: String) throws -> Folder {
+        return try Folder(path: get(key))
+    }
 }
-
 
 public struct Buddybuild {
     public enum Trigger: String {
@@ -38,11 +40,11 @@ public struct Buddybuild {
         let testDir: Folder?
         let scheme: String
 
-        init(env: [String: String]) throws {
-            self.IPA = try? File(path: bbEnv(for: "IPA_PATH", in: env))
-            self.appStoreIPA = try? File(path: bbEnv(for: "APP_STORE_IPA_PATH", in: env))
-            self.testDir = try? Folder(path: bbEnv(for: "TEST_DIR", in: env))
-            self.scheme = try bbEnv(for: "SCHEME", in: env)
+        init(env: Environment) throws {
+            self.IPA = try? File(path: env.get("IPA_PATH"))
+            self.appStoreIPA = try? File(path: env.get("APP_STORE_IPA_PATH"))
+            self.testDir = try? Folder(path: env.get("TEST_DIR"))
+            self.scheme = try env.get("SCHEME")
         }
     }
 
@@ -52,20 +54,12 @@ public struct Buddybuild {
         let home: Folder
         let NDKHome: Folder
 
-        init(env: [String: String]) throws {
-            self.APKs = try Folder(path: bbEnv(for: "APKS_DIR", in: env))
-            self.variants = [try bbEnv(for: "VARIANTS", in: env)]
-            guard let home = env["ANDROID_HOME"] else {
-                throw Error.invalidEnv
-            }
-            self.home = Folder(path: home)
-
-            guard let NDKHome = env["ANDROID_NDK_HOME"] else {
-                throw Error.invalidEnv
-            }
-            self.NDKHome = Folder(path: NDKHome)
+        init(env: Environment) throws {
+            self.APKs = try Folder(path: env.get("APKS_DIR"))
+            self.variants = [try env.get("VARIANTS")]
+            self.home = try env.folder("ANDROID_HOME")
+            self.NDKHome = try env.folder("ANDROID_NDK_HOME")
         }
-
     }
 
     struct Build {
@@ -80,32 +74,32 @@ public struct Buddybuild {
         let secureFiles: Folder
         let triggeredBy: Trigger
 
-        init(env: [String: String]) throws {
+        init(env: Environment) throws {
             let f = NumberFormatter()
-            guard let buildNumber = f.number(from: try bbEnv(for: "BUILD_NUMBER", in: env))?.intValue else {
+            guard let buildNumber = f.number(from: try env.get("BUILD_NUMBER"))?.intValue else {
                 throw Error.invalidEnv
             }
             self.buildNumber = buildNumber
 
-            self.buildId = try bbEnv(for: "BUILD_ID", in: env)
-            self.appId = try bbEnv(for: "APP_ID", in: env)
-            self.branch = try bbEnv(for: "BRANCH", in: env)
-            if let baseBranch = try? bbEnv(for: "BASE_BRANCH", in: env), !baseBranch.isEmpty {
+            self.buildId = try env.get("BUILD_ID")
+            self.appId = try env.get("APP_ID")
+            self.branch = try env.get("BRANCH")
+            if let baseBranch = try? env.get("BASE_BRANCH"), !baseBranch.isEmpty {
                 self.baseBranch = baseBranch
             } else {
                 self.baseBranch = nil
             }
 
-            self.repoSlug = try bbEnv(for: "REPO_SLUG", in: env)
+            self.repoSlug = try env.get("REPO_SLUG")
 
-            guard let pr = try? bbEnv(for: "PULL_REQUEST", in: env), let pullRequest = f.number(from: pr)?.intValue else {
+            guard let pr = try? env.get("PULL_REQUEST"), let pullRequest = f.number(from: pr)?.intValue else {
                 throw Error.invalidEnv
             }
             self.pullRequestId = pullRequest
 
-            self.workspace = try Folder(path: bbEnv(for: "WORKSPACE", in: env))
-            self.secureFiles = try Folder(path: bbEnv(for: "SECURE_FILES", in: env))
-            guard let trigger = (try? bbEnv(for: "TRIGGERED_BY", in: env)).flatMap(Trigger.init) else {
+            self.workspace = try Folder(path: env.get("WORKSPACE"))
+            self.secureFiles = try Folder(path: env.get("SECURE_FILES"))
+            guard let trigger = (try? env.get("TRIGGERED_BY")).flatMap(Trigger.init) else {
                 throw Error.invalidEnv
             }
 
@@ -115,17 +109,17 @@ public struct Buddybuild {
 
     static let build: Build = {
         do {
-            return try Build(env: ProcessInfo.processInfo.environment)
+            return try Build(env: Environment(config: ProcessInfo.processInfo.environment))
         } catch {
             fatalError("Unable to retrieve informations about the build, are you sure it's a Buddybuild custom script?")
         }
     }()
 
     static let ios: IOS? = {
-        return try? IOS(env: ProcessInfo.processInfo.environment)
+        return try? IOS(env: Environment(config: ProcessInfo.processInfo.environment))
     }()
 
     static let android: Android? = {
-        return try? Android(env: ProcessInfo.processInfo.environment)
+        return try? Android(env: Environment(config: ProcessInfo.processInfo.environment))
     }()
 }
