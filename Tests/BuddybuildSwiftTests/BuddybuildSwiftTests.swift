@@ -19,8 +19,26 @@ class BuddybuildSwiftTests: QuickSpec {
             try! sandbox.delete()
         }
 
-        describe("Build") { 
+        describe("Build") {
+            var env: Environment!
+            beforeEach {
+                env = Environment(config: [
+                    "BUILD_NUMBER": "12",
+                    "BUILD_ID": "a8dhfj402ksjdhcjdkeidkelsowldl",
+                    "APP_ID": "a8dhfj402ksjdhcjdkeidkelsowldl",
+                    "BRANCH": "feature/add-pretty-animations",
+                    "BASE_BRANCH": "master",
+                    "REPO_SLUG": "buddybuild-public/buddybuild-swift",
+                    "PULL_REQUEST": "44",
+                    "WORKSPACE": try! sandbox.createSubfolder(named: "workspace").path,
+                    "SECURE_FILES": try! sandbox.createSubfolder(named: "secure-files").path,
+                    "TRIGGERED_BY": "rebuild_of_commit"
+                ])
+            }
 
+            it("can be instantiated") {
+                expect { try Buddybuild.Build(env: env) }.notTo(throwError())
+            }
         }
 
         describe("Android") {
