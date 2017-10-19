@@ -19,7 +19,7 @@ class BuddybuildSwiftTests: QuickSpec {
             try! sandbox.delete()
         }
 
-        describe("Build") {
+        describe("Build") { 
 
         }
 
@@ -40,7 +40,7 @@ class BuddybuildSwiftTests: QuickSpec {
                     env = nil
                 }
 
-                it("can't be instanciated") {
+                it("can't be instantiated") {
                     expect { try Buddybuild.Android(env: env) }.to(throwError())
                 }
             }
@@ -56,7 +56,7 @@ class BuddybuildSwiftTests: QuickSpec {
                     ])
                 }
 
-                it("can be instanciated") {
+                it("can be instantiated") {
                     expect { try Buddybuild.Android(env: env) }.notTo(throwError())
                 }
             }
@@ -75,12 +75,12 @@ class BuddybuildSwiftTests: QuickSpec {
                     ])
                 }
 
-                it("can be instanciated") {
+                it("can be instantiated") {
                     expect { try Buddybuild.IOS(env: env) }.notTo(throwError())
                 }
             }
 
-            context("building and Android app") {
+            context("building an Android app") {
                 var env: Environment!
 
                 beforeEach {
@@ -92,7 +92,7 @@ class BuddybuildSwiftTests: QuickSpec {
                     ])
                 }
 
-                it("can't be instanciated") {
+                it("can't be instantiated") {
                     expect { try Buddybuild.IOS(env: env) }.to(throwError())
                 }
             }
