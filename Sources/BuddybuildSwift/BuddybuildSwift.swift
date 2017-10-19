@@ -110,6 +110,8 @@ public struct Buddybuild {
     static public let build: Build = {
         do {
             return try Build(env: Environment(config: ProcessInfo.processInfo.environment))
+        } catch let Error.missingKey(key) {
+            fatalError("Missing environement key \(key), are you sure it's a Buddybuild custom script?")
         } catch {
             fatalError("Unable to retrieve informations about the build, are you sure it's a Buddybuild custom script?")
         }
