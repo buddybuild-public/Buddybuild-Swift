@@ -12,7 +12,7 @@ struct Environment {
     let config: EnvironmentConfiguration
 
     func get(_ key: String) throws -> String {
-        guard let v = config[key] else {
+        guard let v = config["BUDDYBUILD_\(key)"] else {
             throw Error.missingKey(key)
         }
 
